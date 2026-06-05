@@ -1,0 +1,11 @@
+# Environments
+venv/
+__pycache__/
+
+# Mac System Files
+.DS_Store
+
+# Data & Models (Optional: Remove these if you want them on GitHub)
+*.ckpt
+*.csv
+*.pkl
