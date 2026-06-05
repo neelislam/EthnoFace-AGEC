@@ -6,6 +6,7 @@ import numpy as np
 import joblib
 from PIL import Image
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 import torchvision.models as models
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
@@ -115,39 +116,28 @@ def run_balanced_training():
     df = pd.read_csv(manifest_path)
     
     # --------------------------------------------------------------------------
-    # MACRO-REGION MAPPING (Option 2 Implementation)
+    # MACRO-REGION MAPPING
     # --------------------------------------------------------------------------
     print("Mapping independent countries into 11 Global Macro-Regions...")
     
     macro_regions = {
-        # South Asia
         'India': 'South Asia', 'Bangladesh': 'South Asia', 'Pakistan': 'South Asia', 
         'Sri Lanka': 'South Asia', 'Nepal': 'South Asia', 'Bhutan': 'South Asia', 
         'Maldives': 'South Asia', 'Afghanistan': 'South Asia',
-        
-        # East Asia
         'China': 'East Asia', 'Japan': 'East Asia', 'Korea, Republic of': 'East Asia', 
         "Korea, Democratic People's Republic of": 'East Asia', 'Taiwan, Province of China': 'East Asia', 
         'Mongolia': 'East Asia', 'Hong Kong': 'East Asia', 'Macao': 'East Asia',
-        
-        # Southeast Asia
         'Indonesia': 'Southeast Asia', 'Philippines': 'Southeast Asia', 'Viet Nam': 'Southeast Asia', 
         'Thailand': 'Southeast Asia', 'Myanmar': 'Southeast Asia', 'Malaysia': 'Southeast Asia', 
         'Cambodia': 'Southeast Asia', 'Lao People\'s Democratic Republic': 'Southeast Asia', 
         'Singapore': 'Southeast Asia', 'Timor-Leste': 'Southeast Asia', 'Brunei Darussalam': 'Southeast Asia',
-        
-        # Central Asia
         'Uzbekistan': 'Central Asia', 'Kazakhstan': 'Central Asia', 'Tajikistan': 'Central Asia', 
         'Kyrgyzstan': 'Central Asia', 'Turkmenistan': 'Central Asia',
-        
-        # Middle East & North Africa (MENA)
         'Egypt': 'MENA', 'Iran, Islamic Republic of': 'MENA', 'Turkey': 'MENA', 'Iraq': 'MENA', 
         'Saudi Arabia': 'MENA', 'Yemen': 'MENA', 'Syrian Arab Republic': 'MENA', 'Morocco': 'MENA', 
         'Algeria': 'MENA', 'Jordan': 'MENA', 'United Arab Emirates': 'MENA', 'Israel': 'MENA', 
         'Lebanon': 'MENA', 'Palestine, State of': 'MENA', 'Oman': 'MENA', 'Kuwait': 'MENA', 
         'Qatar': 'MENA', 'Bahrain': 'MENA', 'Tunisia': 'MENA', 'Libya': 'MENA',
-        
-        # Sub-Saharan Africa
         'Nigeria': 'Sub-Saharan Africa', 'Ethiopia': 'Sub-Saharan Africa', 'Congo, The Democratic Republic of the': 'Sub-Saharan Africa', 
         'South Africa': 'Sub-Saharan Africa', 'Tanzania, United Republic of': 'Sub-Saharan Africa', 
         'Kenya': 'Sub-Saharan Africa', 'Uganda': 'Sub-Saharan Africa', 'Sudan': 'Sub-Saharan Africa', 
@@ -155,26 +145,18 @@ def run_balanced_training():
         'Madagascar': 'Sub-Saharan Africa', 'Senegal': 'Sub-Saharan Africa', 'Zimbabwe': 'Sub-Saharan Africa', 
         'Rwanda': 'Sub-Saharan Africa', 'Guinea': 'Sub-Saharan Africa', 'Burundi': 'Sub-Saharan Africa', 
         'Somalia': 'Sub-Saharan Africa', 'Eritrea': 'Sub-Saharan Africa', 'Sierra Leone': 'Sub-Saharan Africa',
-        
-        # Western & Northern Europe
         'Germany': 'Western Europe', 'United Kingdom': 'Western Europe', 'France': 'Western Europe', 
         'Italy': 'Western Europe', 'Spain': 'Western Europe', 'Netherlands': 'Western Europe', 
         'Belgium': 'Western Europe', 'Sweden': 'Western Europe', 'Austria': 'Western Europe', 
         'Switzerland': 'Western Europe', 'Denmark': 'Western Europe', 'Finland': 'Western Europe', 
         'Norway': 'Western Europe', 'Ireland': 'Western Europe', 'Portugal': 'Western Europe', 'Iceland': 'Western Europe',
-        
-        # Eastern & Southern Europe
         'Russian Federation': 'Eastern Europe', 'Ukraine': 'Eastern Europe', 'Poland': 'Eastern Europe', 
         'Romania': 'Eastern Europe', 'Czechia': 'Eastern Europe', 'Hungary': 'Eastern Europe', 
         'Belarus': 'Eastern Europe', 'Bulgaria': 'Eastern Europe', 'Serbia': 'Eastern Europe', 
         'Slovakia': 'Eastern Europe', 'Croatia': 'Eastern Europe', 'Bosnia and Herzegovina': 'Eastern Europe', 
         'Moldova, Republic of': 'Eastern Europe', 'Albania': 'Eastern Europe', 'Lithuania': 'Eastern Europe', 
         'Slovenia': 'Eastern Europe', 'Latvia': 'Eastern Europe', 'Estonia': 'Eastern Europe', 'Greece': 'Eastern Europe',
-        
-        # North America
         'United States': 'North America', 'Canada': 'North America', 'Bermuda': 'North America', 'Greenland': 'North America',
-        
-        # Latin America & Caribbean
         'Brazil': 'Latin America', 'Mexico': 'Latin America', 'Colombia': 'Latin America', 
         'Argentina': 'Latin America', 'Peru': 'Latin America', 'Venezuela, Bolivarian Republic of': 'Latin America', 
         'Chile': 'Latin America', 'Ecuador': 'Latin America', 'Guatemala': 'Latin America', 
@@ -182,8 +164,6 @@ def run_balanced_training():
         'Dominican Republic': 'Latin America', 'Honduras': 'Latin America', 'Paraguay': 'Latin America', 
         'El Salvador': 'Latin America', 'Nicaragua': 'Latin America', 'Costa Rica': 'Latin America', 
         'Puerto Rico': 'Latin America', 'Panama': 'Latin America', 'Uruguay': 'Latin America', 'Jamaica': 'Latin America',
-        
-        # Oceania
         'Australia': 'Oceania', 'New Zealand': 'Oceania', 'Papua New Guinea': 'Oceania', 
         'Fiji': 'Oceania', 'Solomon Islands': 'Oceania', 'Vanuatu': 'Oceania', 'Samoa': 'Oceania', 
         'Kiribati': 'Oceania', 'Tonga': 'Oceania', 'Micronesia, Federated States of': 'Oceania'
@@ -192,7 +172,7 @@ def run_balanced_training():
     # Map the countries to regions
     df['region'] = df['country'].map(macro_regions)
     
-    # Drop unmapped data (tiny islands, dependencies, etc. that don't fit well)
+    # Drop unmapped data
     original_size = len(df)
     df = df.dropna(subset=['region']).reset_index(drop=True)
     print(f"Dropped {original_size - len(df)} images from unmapped territories.")
@@ -200,7 +180,6 @@ def run_balanced_training():
     # OVERWRITE the 'country' column with the new 'region' data
     df['country'] = df['region']
     print(f"Dataset successfully compressed to {df['country'].nunique()} Macro-Regions!\n")
-    # --------------------------------------------------------------------------
 
     # Encode categorical targets
     encoders = {}
@@ -212,9 +191,20 @@ def run_balanced_training():
     joblib.dump(encoders, "multitask_encoders.pkl")
     print("Label encoders updated and saved successfully.")
 
-    # Train/Validation Split (80/20)
-    train_df = df.sample(frac=0.8, random_state=42).reset_index(drop=True)
-    val_df = df.drop(train_df.index).reset_index(drop=True)
+    # --------------------------------------------------------------------------
+    # STRICT DATA LEAK FIX: Scikit-Learn Stratified Split
+    # --------------------------------------------------------------------------
+    print("Performing strict stratified dataset split to prevent data leaks...")
+    train_df, val_df = train_test_split(
+        df, 
+        test_size=0.2, 
+        random_state=42, 
+        stratify=df['country_encoded'] # Ensures exact proportion of regions in train/val sets
+    )
+    
+    # Safely reset index AFTER the split is complete
+    train_df = train_df.reset_index(drop=True)
+    val_df = val_df.reset_index(drop=True)
     
     # Compute Weights for the Sampler
     print("Computing sample weights for training balance...")
@@ -222,7 +212,8 @@ def run_balanced_training():
     class_weights = {cls: 1.0 / count for cls, count in train_country_counts.items()}
     
     sample_weights = train_df['country_encoded'].map(class_weights).values
-    sample_weights = torch.DoubleTensor(sample_weights)
+    # Added a simple list conversion to safely bridge numpy to PyTorch tensors
+    sample_weights = torch.DoubleTensor(sample_weights.tolist()) 
     
     sampler = WeightedRandomSampler(
         weights=sample_weights,
@@ -249,7 +240,7 @@ def run_balanced_training():
     train_dataset = MultiTaskDataset(train_df, transform=train_transform)
     val_dataset = MultiTaskDataset(val_df, transform=val_transform)
     
-    # DataLoaders (num_workers=0 to protect 8GB unified memory on M1)
+    # DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=64, sampler=sampler, num_workers=0, drop_last=True)
     val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=0)
     
@@ -275,12 +266,12 @@ def run_balanced_training():
         log_every_n_steps=10
     )
     
-    print("\n🚀 Commencing Macro-Region Training Execution Loop...")
+    print("\n🚀 Commencing Honest Macro-Region Training Loop...")
     trainer.fit(model, train_loader, val_loader)
     
     trainer.model.to("cpu")
     torch.save(model.state_dict(), "multitask_model_final.ckpt")
-    print("✨ Macro-Region training lifecycle finished safely.")
+    print("✨ Honest Macro-Region training lifecycle finished safely.")
 
 if __name__ == "__main__":
     run_balanced_training()
