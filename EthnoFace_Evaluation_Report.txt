@@ -14,21 +14,21 @@ Optimization      : WeightedRandomSampler (Class-Balanced)
 
 2. GLOBAL PERFORMANCE METRICS
 ----------------------------------
-Top-1 Accuracy    : 77.46%
-Top-3 Accuracy    : 91.62%
+Top-1 Accuracy    : 62.23%
+Top-3 Accuracy    : 85.62%
 
 3. REGIONAL DEMOGRAPHIC PERFORMANCE (F1-Score)
 ----------------------------------
 Macro-Region              | Precision  | Recall     | F1-Score
 -----------------------------------------------------------------
-Sub-Saharan Africa        | 0.87       | 0.94       | 0.91
-Southeast Asia            | 0.93       | 0.83       | 0.88
-North America             | 0.90       | 0.82       | 0.86
-Central Asia              | 0.83       | 0.87       | 0.85
-South Asia                | 0.84       | 0.85       | 0.85
-micro avg                 | 0.79       | 0.77       | 0.78
-MENA                      | 0.93       | 0.67       | 0.78
-Oceania                   | 0.67       | 0.87       | 0.75
-Latin America             | 0.69       | 0.68       | 0.68
-Western Europe            | 0.61       | 0.77       | 0.68
-Eastern Europe            | 0.50       | 0.62       | 0.55
+Central Asia              | 0.84       | 0.84       | 0.84
+Southeast Asia            | 0.88       | 0.78       | 0.83
+Sub-Saharan Africa        | 0.75       | 0.85       | 0.80
+North America             | 0.74       | 0.73       | 0.74
+South Asia                | 0.76       | 0.67       | 0.71
+micro avg                 | 0.64       | 0.62       | 0.63
+MENA                      | 0.63       | 0.55       | 0.59
+Oceania                   | 0.39       | 0.90       | 0.54
+Western Europe            | 0.45       | 0.46       | 0.46
+Latin America             | 0.50       | 0.32       | 0.39
+Eastern Europe            | 0.29       | 0.39       | 0.33
